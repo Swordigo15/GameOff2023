@@ -8,7 +8,14 @@ public class SupplyApocalypse : ModuleRules
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 	
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore" });
+		PublicDependencyModuleNames.AddRange(new string[] { 
+			"Core", 
+			"CoreUObject", 
+			"Engine",
+			"EnhancedInput",
+			"InputCore",
+			"ChaosVehicles" 
+		});
 
 		PrivateDependencyModuleNames.AddRange(new string[] {  });
 

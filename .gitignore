@@ -1,7 +1,9 @@
 /.git
 /.vscode
 /Binaries
+/Content/External
+/Content/__ExternalActors__
+/Content/__ExternalObjects__
 /DerivedDataCache
 /Intermediate
-/Platforms
 /Saved

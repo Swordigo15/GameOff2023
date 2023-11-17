@@ -32,5 +32,5 @@ private:
 	// ===== Assets ========== //
 
 	UPROPERTY(EditDefaultsOnly)
-	TObjectPtr<UStaticMesh> RoadMesh;
+	TSoftObjectPtr<UStaticMesh> RoadMesh;
 };

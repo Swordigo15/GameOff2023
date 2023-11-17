@@ -50,7 +50,8 @@ void ARoadSpline::OnConstruction(const FTransform& Transform)
 			AddComponentByClass(USplineMeshComponent::StaticClass(), false, FTransform(), false)
 		);
 
-		SplineMesh->SetStaticMesh(RoadMesh);
+		SplineMesh->SetMobility(EComponentMobility::Static);
+		SplineMesh->SetStaticMesh(RoadMesh.LoadSynchronous());
 		SplineMesh->SetForwardAxis(ESplineMeshAxis::X);
 		SplineMesh->SetStartAndEnd(StartLocation, StartTangent, EndLocation, EndTangent);
 		SplineMesh->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
