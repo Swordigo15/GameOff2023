@@ -131,7 +131,7 @@ void APickup::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	CameraFollow(DeltaTime);
+	ReorientCamera(DeltaTime);
 }
 
 // ==================== Input ==================== //
@@ -176,19 +176,19 @@ void APickup::Look(const FInputActionValue& InputValue)
 	case EVehicleMode::EVM_Drive:
 		AdjustedSpringArm = DriveSpringArm;
 		Limit 			  = DriveAngleLimit;
-		VehicleVector	  = FVector::ForwardVector;
+		VehicleVector	  = GetActorForwardVector();
 		break;
 
 	case EVehicleMode::EVM_Throw:
 		AdjustedSpringArm = ThrowSpringArm;
 		Limit 			  = ThrowAngleLimit;
-		VehicleVector	  = FVector::ForwardVector * -1.f;
+		VehicleVector	  = GetActorForwardVector() * -1.f;
 		break;
 	
 	default:
 		AdjustedSpringArm = DriveSpringArm;
 		Limit 			  = DriveAngleLimit;
-		VehicleVector	  = FVector::ForwardVector;
+		VehicleVector	  = GetActorForwardVector();
 		break;
 	}
 
@@ -197,7 +197,7 @@ void APickup::Look(const FInputActionValue& InputValue)
 	float NewAngle = FMath::Clamp(Angle + Value, -Limit, Limit);
 
 	// Finally add angle to the vehicle vector rotation
-	if (NewAngle != -Limit || NewAngle != Limit)
+	if (NewAngle != -Limit && NewAngle != Limit)
 		AdjustedSpringArm->AddLocalRotation(FRotator(0.f, Value, 0.f));
 }
 
@@ -250,36 +250,38 @@ float APickup::GetCameraAngle(const FVector& CameraVector, const FVector& Vehicl
 	return Angle;
 }
 
-void APickup::CameraFollow(float DeltaTime)
+void APickup::ReorientCamera(float DeltaTime)
 {
-	// Only following when the timer is over
-	bool bActivated = !GetWorldTimerManager().IsTimerActive(CameraFollowTimerHandle) || Movement->GetForwardSpeedMPH() > 1.f;
-	
-	if (!bActivated) return;
-
 	USpringArmComponent* AdjustedSpringArm;
-	float VehicleVector;
+	FRotator Rotation;
 
 	switch (VehicleMode)
 	{
 		case EVehicleMode::EVM_Drive:
 			AdjustedSpringArm = DriveSpringArm;
-			VehicleVector = 0.f;
+			Rotation = FRotator(0.f, 0.f, 0.f);
 			break;
 
 		case EVehicleMode::EVM_Throw:
 			AdjustedSpringArm = ThrowSpringArm;
-			VehicleVector = 180.f;
+			Rotation = FRotator(0.f, 180.f, 0.f);
 			break;
 
 		default:
 			AdjustedSpringArm = DriveSpringArm;
-			VehicleVector = 0.f;
+			Rotation = FRotator(0.f, 0.f, 0.f);
 			break;
 	}
 
-	float CurrentYaw = AdjustedSpringArm->GetRelativeRotation().Yaw;
-	float NewYaw	 = FMath::FInterpTo(CurrentYaw, VehicleVector, DeltaTime, 1.f);
+	FRotator CurrentRotation = AdjustedSpringArm->GetRelativeRotation();
 
-	AdjustedSpringArm->SetRelativeRotation(FRotator(0.f, NewYaw, 0.f));
+	// Only following when the timer is over and the difference is significant
+	bool bActivated = !FMath::IsNearlyEqual(CurrentRotation.Yaw, Rotation.Yaw, 1.f) && 
+					  (!GetWorldTimerManager().IsTimerActive(CameraFollowTimerHandle) || Movement->GetForwardSpeedMPH() > 1.f);
+
+	if (!bActivated) return;
+
+	FRotator NewRotation     = FMath::RInterpTo(CurrentRotation, Rotation, DeltaTime, 1.f);
+
+	AdjustedSpringArm->SetRelativeRotation(NewRotation);
 }

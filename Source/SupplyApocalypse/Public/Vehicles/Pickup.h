@@ -106,5 +106,5 @@ private:
 	float GetCameraAngle(const FVector& CameraVector, const FVector& VehicleVector);
 
 	/** Make the camera always follow the vehicle's front/back */
-	void CameraFollow(float DeltaTime);
+	void ReorientCamera(float DeltaTime);
 };
