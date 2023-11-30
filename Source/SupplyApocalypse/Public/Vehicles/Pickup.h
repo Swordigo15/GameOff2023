@@ -6,6 +6,7 @@
 #include "GameFramework/Pawn.h"
 #include "Pickup.generated.h"
 
+class AThrowerCharacter;
 class UBoxComponent;
 class UChaosWheeledVehicleMovementComponent;
 class UCameraComponent;
@@ -13,13 +14,6 @@ class UInputAction;
 class USpringArmComponent;
 
 struct FInputActionValue;
-
-enum class EVehicleMode : uint8
-{
-	EVM_Drive = 0,
-	EVM_Throw,
-	EVM_Both
-};
 
 /** Pickup here means vehicle pickup type */
 UCLASS()
@@ -43,7 +37,7 @@ protected:
 private:
 	// ===== Initializer ========== //
 
-	void DefaultInitializer();
+	void DefaultAssetsInitializer();
 
 	// ===== Components ========== //
 
@@ -55,17 +49,10 @@ private:
 
 	/** For driving mode */
 	UPROPERTY(VisibleAnywhere)
-	TObjectPtr<USpringArmComponent> DriveSpringArm;
+	TObjectPtr<USpringArmComponent> SpringArm;
 
 	UPROPERTY(VisibleAnywhere)
-	TObjectPtr<UCameraComponent> DriveCamera;
-
-	/** For throwing mode */
-	UPROPERTY(VisibleAnywhere)
-	TObjectPtr<USpringArmComponent> ThrowSpringArm;
-
-	UPROPERTY(VisibleAnywhere)
-	TObjectPtr<UCameraComponent> ThrowCamera;
+	TObjectPtr<UCameraComponent> Camera;
 
 	// ===== Inputs ========== //
 
@@ -84,11 +71,7 @@ private:
 	void Move(const FInputActionValue& InputValue);
 	void Handbrake(const FInputActionValue& InputValue);
 	void Look(const FInputActionValue& InputValue);
-	void ChangeMode(const FInputActionValue& InputValue);
-
-	// ===== Attributes ========== //
-
-	EVehicleMode VehicleMode = EVehicleMode::EVM_Drive;
+	void ChangeMode();
 
 	// ===== Camera ========== //
 
@@ -99,12 +82,11 @@ private:
 	/** Maximum/minimum angle that can be look at when on Driving Mode */
 	float DriveAngleLimit = 35.f;
 
-	/** Maximum/minimum angle that can be look at when on Throwing Mode */
-	float ThrowAngleLimit = 35.f;
-
-	/** Get the angle between camera and the vehicle's forward/backward/up */
-	float GetCameraAngle(const FVector& CameraVector, const FVector& VehicleVector);
-
 	/** Make the camera always follow the vehicle's front/back */
 	void ReorientCamera(float DeltaTime);
+
+	// ===== Game Objects ========== //
+	
+	UPROPERTY(EditInstanceOnly)
+	TWeakObjectPtr<AThrowerCharacter> Thrower;
 };

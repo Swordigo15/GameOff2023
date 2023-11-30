@@ -11,6 +11,10 @@ void ASAPlayerController::BeginPlay()
     Super::BeginPlay();
 
     UseGameInput();
+
+    // Limit Pitch look
+    PlayerCameraManager->ViewPitchMin = -45.f;
+    PlayerCameraManager->ViewPitchMax = 25.f;
 }
 
 // ==================== Inputs ==================== //

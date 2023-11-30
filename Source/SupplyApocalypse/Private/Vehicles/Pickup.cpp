@@ -1,6 +1,7 @@
 // Copyright Anrility. All Rights Reserved.
 
 #include "Vehicles/Pickup.h"
+#include "Characters/ThrowerCharacter.h"
 #include "Components/BoxComponent.h"
 #include "Camera/CameraComponent.h"
 #include "ChaosWheeledVehicleMovementComponent.h"
@@ -10,6 +11,9 @@
 APickup::APickup()
 {
 	PrimaryActorTick.bCanEverTick = true;
+
+	// Default Value
+	AutoPossessPlayer = EAutoReceiveInput::Player0;
 
 	// PickupMesh
 	PickupMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Pickup Mesh"));
@@ -26,38 +30,25 @@ APickup::APickup()
 	Movement = CreateDefaultSubobject<UChaosWheeledVehicleMovementComponent>(TEXT("Vehicle Movement"));
 	Movement->UpdatedComponent = PickupMesh;
 
-	// Drive Spring Arm
-	DriveSpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("Drive Spring Arm"));
-	DriveSpringArm->SetupAttachment(RootComponent);
-	DriveSpringArm->bInheritPitch = DriveSpringArm->bInheritRoll = false;
-	DriveSpringArm->bDoCollisionTest = false;
-	DriveSpringArm->bEnableCameraRotationLag = true;
-	DriveSpringArm->CameraRotationLagSpeed = 2.f;
+	//  Spring Arm
+	SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("Spring Arm"));
+	SpringArm->SetupAttachment(RootComponent);
+	SpringArm->bInheritPitch = SpringArm->bInheritRoll = false;
+	SpringArm->bDoCollisionTest = false;
+	SpringArm->bEnableCameraRotationLag = true;
+	SpringArm->CameraRotationLagSpeed = 1.f;
 
-	// Drive Camera
-	DriveCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("Drive Camera"));
-	DriveCamera->SetupAttachment(DriveSpringArm);
-
-	// Throw Spring Arm
-	ThrowSpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("Throw Spring Arm"));
-	ThrowSpringArm->SetupAttachment(RootComponent);
-	ThrowSpringArm->bInheritPitch = ThrowSpringArm->bInheritRoll = false;
-	ThrowSpringArm->bDoCollisionTest = false;
-	ThrowSpringArm->bEnableCameraRotationLag = true;
-	ThrowSpringArm->CameraRotationLagSpeed = 2.f;
-
-	// Throw Camera
-	ThrowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("Throw Camera"));
-	ThrowCamera->SetupAttachment(ThrowSpringArm);
-	ThrowCamera->Deactivate(); /* Using drive camera for the first time */
+	//  Camera
+	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
+	Camera->SetupAttachment(SpringArm);
 
 	// Initializer
-	DefaultInitializer();
+	DefaultAssetsInitializer();
 }
 
 // ==================== Initializer ==================== //
 
-void APickup::DefaultInitializer()
+void APickup::DefaultAssetsInitializer()
 {
 	// Adding wheels to the movement
 	FChaosWheelSetup Wheel1, Wheel2, Wheel3, Wheel4;
@@ -141,10 +132,10 @@ void APickup::Move(const FInputActionValue& InputValue)
 	const FVector2D Value = InputValue.Get<FVector2D>();
 
 	// W Keyboard
-	Movement->SetThrottleInput(Value.Y > 0.f ? 1.f : 0);
+	Movement->SetThrottleInput(Value.Y > 0.f ? 1.f : 0.f);
 
 	// S Keyboard
-	Movement->SetBrakeInput(Value.Y < 0.f ? 1.f : 0);
+	Movement->SetBrakeInput(Value.Y < 0.f ? 1.f : 0.f);
 
 	// A and D Keyboard
 	Movement->SetSteeringInput(Value.X);
@@ -163,125 +154,35 @@ void APickup::Look(const FInputActionValue& InputValue)
 	GetWorldTimerManager().SetTimer(CameraFollowTimerHandle, CameraFollowTimer, false);
 
 	// Getting the value from input
-	const float Value = InputValue.Get<float>();
-
-	// Initialize some needed components
-	USpringArmComponent* AdjustedSpringArm;
-	FVector VehicleVector;
-	float Limit;
-
-	// Assign the value depends on the mode
-	switch (VehicleMode)
-	{
-	case EVehicleMode::EVM_Drive:
-		AdjustedSpringArm = DriveSpringArm;
-		Limit 			  = DriveAngleLimit;
-		VehicleVector	  = GetActorForwardVector();
-		break;
-
-	case EVehicleMode::EVM_Throw:
-		AdjustedSpringArm = ThrowSpringArm;
-		Limit 			  = ThrowAngleLimit;
-		VehicleVector	  = GetActorForwardVector() * -1.f;
-		break;
-	
-	default:
-		AdjustedSpringArm = DriveSpringArm;
-		Limit 			  = DriveAngleLimit;
-		VehicleVector	  = GetActorForwardVector();
-		break;
-	}
+	const FVector2D Value = InputValue.Get<FVector2D>();
 
 	// Add the relative rotation by the angle
-	float Angle    = GetCameraAngle(AdjustedSpringArm->GetForwardVector(), VehicleVector);
-	float NewAngle = FMath::Clamp(Angle + Value, -Limit, Limit);
+	float CurrentYaw = SpringArm->GetRelativeRotation().Yaw;
+	float NewYaw 	 = FMath::Clamp(CurrentYaw + Value.X, -DriveAngleLimit, DriveAngleLimit);
 
 	// Finally add angle to the vehicle vector rotation
-	if (NewAngle != -Limit && NewAngle != Limit)
-		AdjustedSpringArm->AddLocalRotation(FRotator(0.f, Value, 0.f));
+	if (NewYaw != -DriveAngleLimit && NewYaw != DriveAngleLimit)
+		SpringArm->AddLocalRotation(FRotator(0.f, Value.X, 0.f));
 }
 
-void APickup::ChangeMode(const FInputActionValue& InputValue)
+void APickup::ChangeMode()
 {
-	int8 Value = static_cast<int8>(InputValue.Get<float>());
-	int8 Current = (int8)VehicleMode;
-
-	// clamp to the min once exceeding the max and vice versa
-	VehicleMode = Current + Value > 2 ? EVehicleMode::EVM_Drive :
-				  Current + Value < 0 ? EVehicleMode::EVM_Both  : 
-				  (EVehicleMode)(Current + Value);
-
-	// Change the camera depends on the vehicle mode
-	DriveCamera->Deactivate();
-	ThrowCamera->Deactivate();
-
-	switch (VehicleMode)
-	{
-	case EVehicleMode::EVM_Drive:
-		DriveCamera->Activate();
-		break;
-	
-	case EVehicleMode::EVM_Throw:
-		ThrowCamera->Activate();
-		break;
-
-	default:
-		DriveCamera->Activate();
-		break;
-	}
+	GetController()->Possess(Thrower.Get());	
 }
 
 // ==================== Camera ==================== //
 
-float APickup::GetCameraAngle(const FVector& CameraVector, const FVector& VehicleVector)
-{
-	// We just care about 2D direction, so just to make sure make it normalized 2D
-	// NOTE: VehicleVector doesn't need to be normalized as its already a normalized 2D
-	FVector Normalized2D = CameraVector.GetSafeNormal2D();
-
-	// Using dot product to get the angle
-	float CosX  = FVector::DotProduct(VehicleVector, Normalized2D);
-	float Angle = FMath  ::Acos(CosX) * 180.f / PI; /* Convert it directly to degree */
-
-	// Get the direction using cross product
-	const FVector Cross = FVector::CrossProduct(VehicleVector, Normalized2D);
-	Angle = Cross.Z < 0 ? Angle * -1.f : Angle;
-
-	return Angle;
-}
-
 void APickup::ReorientCamera(float DeltaTime)
 {
-	USpringArmComponent* AdjustedSpringArm;
-	FRotator Rotation;
-
-	switch (VehicleMode)
-	{
-		case EVehicleMode::EVM_Drive:
-			AdjustedSpringArm = DriveSpringArm;
-			Rotation = FRotator(0.f, 0.f, 0.f);
-			break;
-
-		case EVehicleMode::EVM_Throw:
-			AdjustedSpringArm = ThrowSpringArm;
-			Rotation = FRotator(0.f, 180.f, 0.f);
-			break;
-
-		default:
-			AdjustedSpringArm = DriveSpringArm;
-			Rotation = FRotator(0.f, 0.f, 0.f);
-			break;
-	}
-
-	FRotator CurrentRotation = AdjustedSpringArm->GetRelativeRotation();
+	float CurrentYaw = SpringArm->GetRelativeRotation().Yaw;
 
 	// Only following when the timer is over and the difference is significant
-	bool bActivated = !FMath::IsNearlyEqual(CurrentRotation.Yaw, Rotation.Yaw, 1.f) && 
+	bool bActivated = FMath::Abs(CurrentYaw) > 0.5f && 
 					  (!GetWorldTimerManager().IsTimerActive(CameraFollowTimerHandle) || Movement->GetForwardSpeedMPH() > 1.f);
 
 	if (!bActivated) return;
 
-	FRotator NewRotation     = FMath::RInterpTo(CurrentRotation, Rotation, DeltaTime, 1.f);
+	float NewYaw = FMath::FInterpTo(CurrentYaw, 0.f, DeltaTime, 1.f);
 
-	AdjustedSpringArm->SetRelativeRotation(NewRotation);
+	SpringArm->SetRelativeRotation(FRotator(0.f, NewYaw, 0.f));
 }

@@ -21,7 +21,7 @@ ARoadSpline::ARoadSpline()
 
 	// Loading road asset
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> RoadMeshObj(
-		TEXT("/Script/Engine.StaticMesh'/Game/GameContent/Meshes/SM_Road.SM_Road'")
+		TEXT("/Script/Engine.StaticMesh'/Game/GameContent/Meshes/Static/SM_Road.SM_Road'")
 	);
 
 	RoadMesh = RoadMeshObj.Object;
