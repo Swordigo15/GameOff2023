@@ -58,19 +58,26 @@ void AThrowerCharacter::DefaultAssetsInitializer()
 
 // ==================== Lifecycles ==================== //
 
+void AThrowerCharacter::OnConstruction(const FTransform& Transform)
+{
+	// Attaching to the pickup/vehicle
+	if (Pickup.IsValid())
+	{
+		FAttachmentTransformRules AttachPickupRules(
+			EAttachmentRule::SnapToTarget,
+			EAttachmentRule::SnapToTarget,
+			EAttachmentRule::KeepWorld,
+			true
+		);
+
+		AttachToActor(Pickup.Get(), AttachPickupRules, TEXT("Standing"));
+	}
+}
+
 void AThrowerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// Attaching to the pickup/vehicle
-	FAttachmentTransformRules AttachPickupRules(
-		EAttachmentRule::SnapToTarget,
-		EAttachmentRule::SnapToTarget,
-		EAttachmentRule::KeepWorld,
-		true
-	);
-
-	AttachToActor(Pickup.Get(), AttachPickupRules, TEXT("Standing"));
 }
 
 void AThrowerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)

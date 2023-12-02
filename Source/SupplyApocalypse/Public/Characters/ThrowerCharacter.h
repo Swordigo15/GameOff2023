@@ -24,6 +24,7 @@ public:
 
 	// ===== Lifecycles ========== //
 
+	virtual void OnConstruction(const FTransform& Transform) override;
 	virtual void Tick(float DeltaTime) override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
@@ -71,7 +72,7 @@ private:
 
 	// ===== Game Objects ========== //
 
-	UPROPERTY(EditInstanceOnly)
+	UPROPERTY(EditInstanceOnly, Category=GameObjects)
 	TWeakObjectPtr<APickup> Pickup;
 
 	// ===== Camera ========== //
