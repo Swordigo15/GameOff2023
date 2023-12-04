@@ -3,19 +3,13 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/Pawn.h"
+#include "GameFramework/Actor.h"
 #include "ThrowerCharacter.generated.h"
 
-class ASAPlayerController;
 class APickup;
-class UCapsuleComponent;
-class UCameraComponent;
-class USpringArmComponent;
-class UInputAction;
-struct FInputActionValue;
 
 UCLASS()
-class SUPPLYAPOCALYPSE_API AThrowerCharacter : public APawn
+class SUPPLYAPOCALYPSE_API AThrowerCharacter : public AActor
 {
 	GENERATED_BODY()
 
@@ -26,7 +20,10 @@ public:
 
 	virtual void OnConstruction(const FTransform& Transform) override;
 	virtual void Tick(float DeltaTime) override;
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
+	// ===== Input Handlers ========== //
+
+	FORCEINLINE void Look(const FVector& CrosshairPosition);
 
 protected:
 	// ===== Lifecycles ========== //
@@ -34,48 +31,24 @@ protected:
 	virtual void BeginPlay() override;
 
 private:
-	// ===== Default Initializer ========== //
-
-	void DefaultAssetsInitializer();
-
-	// ===== Game Frameworks ========== //
-
-	UPROPERTY()
-	TWeakObjectPtr<ASAPlayerController> PlayerController;
-
-	FORCEINLINE const bool CheckPlayerController();
-
 	// ===== Components ========== //
 
 	UPROPERTY(VisibleAnywhere)
-	TObjectPtr<UCapsuleComponent> CapsuleRoot;
-
-	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<USkeletalMeshComponent> SkeletalMesh;
-
-	UPROPERTY(VisibleAnywhere)
-	TObjectPtr<USpringArmComponent> SpringArm;
-
-	UPROPERTY(VisibleAnywhere)
-	TObjectPtr<UCameraComponent> Camera;
-
-	// ===== Inputs ========== //
-
-	UPROPERTY(EditAnywhere, Category=Inputs)
-	TSoftObjectPtr<UInputAction> LookAction;
-
-	UPROPERTY(EditAnywhere, Category=Inputs)
-	TSoftObjectPtr<UInputAction> ChangeModeAction;
-
-	void Look(const FInputActionValue& InputValue);
-	void ChangeMode();
 
 	// ===== Game Objects ========== //
 
 	UPROPERTY(EditInstanceOnly, Category=GameObjects)
 	TWeakObjectPtr<APickup> Pickup;
 
-	// ===== Camera ========== //
+	// ===== View ========== //
 
-	float ClampCamera(float Value, float Max);
+	UPROPERTY(EditAnywhere, Category=View, meta=(Units="Degrees"))
+	float MaximumView = 75.f;
+
+	bool    bShouldLook;
+	FVector LookTarget;
+
+	void LookAt(float DeltaTime);
+	void ClampView(const FRotator& NewRot);
 };

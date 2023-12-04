@@ -8,52 +8,19 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/SAPlayerController.h"
 #include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetMathLibrary.h"
 #include "Vehicles/Pickup.h"
 
 AThrowerCharacter::AThrowerCharacter()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
-	// Default value
-	bUseControllerRotationPitch = bUseControllerRotationRoll = bUseControllerRotationYaw = false;
-
-	// Root Capsule
-	CapsuleRoot = CreateDefaultSubobject<UCapsuleComponent>(TEXT("Capsule Root"));
-
-	SetRootComponent(CapsuleRoot);
+	// Default root
+	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("Default Root"));
 
 	// Skeletal Mesh
 	SkeletalMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Skeletal Mesh"));
 	SkeletalMesh->SetupAttachment(RootComponent);
-
-	// Spring Arm
-	SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("Spring Arm"));
-	SpringArm->SetupAttachment(RootComponent);
-
-	// Camera
-	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
-	Camera->SetupAttachment(SpringArm);
-
-	// Initialize Assets
-	DefaultAssetsInitializer();
-}
-
-// ==================== Initializer ==================== //
-
-void AThrowerCharacter::DefaultAssetsInitializer()
-{
-	// Inputs Initializer
-	ConstructorHelpers::FObjectFinder<UInputAction> LookObject(
-		TEXT("/Script/EnhancedInput.InputAction'/Game/GameContent/Blueprints/Inputs/IA_Look.IA_Look'")
-	);
-
-	LookAction = LookObject.Object;
-
-	ConstructorHelpers::FObjectFinder<UInputAction> ChangeModeObject(
-		TEXT("/Script/EnhancedInput.InputAction'/Game/GameContent/Blueprints/Inputs/IA_ChangeMode.IA_ChangeMode'")
-	);
-
-	ChangeModeAction = ChangeModeObject.Object;
 }
 
 // ==================== Lifecycles ==================== //
@@ -80,71 +47,65 @@ void AThrowerCharacter::BeginPlay()
 
 }
 
-void AThrowerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
-{
-	Super::SetupPlayerInputComponent(PlayerInputComponent);
-
-	if (UEnhancedInputComponent* EnhancedInput = Cast<UEnhancedInputComponent>(PlayerInputComponent))
-	{
-		EnhancedInput->BindAction(LookAction.LoadSynchronous(), ETriggerEvent::Triggered, this, &ThisClass::Look);
-		EnhancedInput->BindAction(ChangeModeAction.LoadSynchronous(), ETriggerEvent::Triggered, this, &ThisClass::ChangeMode);
-	}
-}
-
 void AThrowerCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-}
-
-// ==================== GameFrameworks ==================== //
-
-const bool AThrowerCharacter::CheckPlayerController()
-{
-	if (!PlayerController.IsValid()) PlayerController = Cast<ASAPlayerController>(GetController());
-
-	return PlayerController.IsValid();
+	LookAt(DeltaTime);
 }
 
 // ==================== Inputs ==================== //
 
-void AThrowerCharacter::Look(const FInputActionValue& InputValue)
+void AThrowerCharacter::Look(const FVector& CrosshairPosition)
 {
-	const FVector2D Value = InputValue.Get<FVector2D>();
-
-	AddControllerPitchInput(Value.Y);
-
-	// Handling Yaw
-	float ClampYaw = ClampCamera(Value.X, 120.f); 
-	AddControllerYawInput(ClampYaw);
-}
-
-void AThrowerCharacter::ChangeMode()
-{
-	if (CheckPlayerController()) PlayerController->Possess(Pickup.Get());
+	bShouldLook = true;
+	LookTarget  = CrosshairPosition;
 }
 
 // ==================== Camera ==================== //
 
-float AThrowerCharacter::ClampCamera(float Value, float Max)
+void AThrowerCharacter::LookAt(float DeltaTime)
 {
-	// Get the forward vectors
-	const FVector CharacterForward = GetActorForwardVector();
-	const FVector CharacterRight   = GetActorRightVector();
-	const FVector CameraForward    = Camera->GetForwardVector();
+	if (!bShouldLook) return;
 
-	// Yaw towards clamped range
-	bool bLeftSided = FVector::DotProduct(CharacterRight, CameraForward) > 0.f;
-	float NegInput = Value > 0.f ? 0.f   : Value;
-	float PosInput = Value > 0.f ? Value : 0.f;
+	// Get Rotation
+	FRotator CurrentRot = GetActorRotation();
+	FRotator TargetRot  = UKismetMathLibrary::FindLookAtRotation(GetActorLocation(), LookTarget);
 
-	float ClampedYaw = bLeftSided ? NegInput : PosInput;
-	
+	// Interpolate the rotation to get smooth transition
+	FRotator NewRot = FMath::RInterpTo(CurrentRot, TargetRot, DeltaTime, 3.f);
+	NewRot.Roll = NewRot.Pitch = 0.f; /** We only care about the yaw */
+
+	// Stop the interpolation once its nearly equal
+	if (FMath::IsNearlyEqual(TargetRot.Yaw, NewRot.Yaw, 1.f))
+		bShouldLook = false;
+
+	// Apply if not exceed the limit
+	ClampView(NewRot);
+}
+
+void AThrowerCharacter::ClampView(const FRotator& NewRot)
+{
+	// Get the value for the rotation
+	float Delta = NewRot.Yaw - GetActorRotation().Yaw;
+
+	// Get vectors
+	const FVector PickupBack       = Pickup->GetActorForwardVector() * -1.f;
+	const FVector CharacterForward = 		 GetActorForwardVector();
+	const FVector CharacterRight   = 		 GetActorRightVector() * -1.f;
+
+	// Get the direction using cross product
+	bool bLeftSided = FVector::DotProduct(CharacterRight, PickupBack) > 0.f;
+	float NegDelta  = Delta > 0.f ? 0.f   : Delta;
+	float PosDelta  = Delta > 0.f ? Delta : 0.f;
+	float ClampedYaw = bLeftSided ? NegDelta : PosDelta;
+
 	// Calcualate the angle between em using dot products
-	float CosX  = FVector::DotProduct(CharacterForward, CameraForward);
-	float Angle = FMath::Acos(CosX) * 180.f / UE_PI;
+	float CosX  = FVector::DotProduct(CharacterForward, PickupBack);
+	float Angle = FMath  ::Acos(CosX) * 180.f / UE_PI;
+	bool bWithinClamped = Angle <= MaximumView;
 
-	bool bWithinClampedRange = Angle < Max / 2.f;
-
-	return bWithinClampedRange ? Value : ClampedYaw;
+	Delta = bWithinClamped ? Delta : ClampedYaw;
+	
+	AddActorWorldRotation(FRotator(0.f, Delta, 0.f));
 }

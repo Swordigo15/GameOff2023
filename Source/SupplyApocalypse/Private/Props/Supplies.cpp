@@ -51,19 +51,9 @@ void ASupplies::PlaceSupplies()
 
 	if (MeshesAsset.IsEmpty() || !bShouldPlace) return;
 
-	// Update CurrentCount
-	CurrentCount = MaxCount;
-
 	// Remove existing mesh if any from the rear, so removal can be done in O(1) using Pop
-	if (!SupplyMeshes.IsEmpty())
-		for (int8 I = SupplyMeshes.Num() - 1; I >= 0; --I)
-		{
-			RemoveInstanceComponent(SupplyMeshes[I]);
-			RemoveOwnedComponent(SupplyMeshes[I]);
-			SupplyMeshes[I]->DestroyComponent();
-
-			SupplyMeshes.Pop();
-		}
+	while (!SupplyMeshes.IsEmpty())
+		PopSupply();
 
 	for (uint8 I = 0; I < MaxCount; ++I)
 	{
@@ -85,6 +75,21 @@ void ASupplies::PlaceSupplies()
 
 		SupplyMeshes.Push(Mesh);
 	}
+}
+
+void ASupplies::PopSupply()
+{
+	if (SupplyMeshes.IsEmpty()) return;
+
+	// Just do the ordinary pop
+	uint8 I = SupplyMeshes.Num() - 1;
+	UStaticMeshComponent* PoppedMesh = SupplyMeshes[I];
+
+	RemoveInstanceComponent(PoppedMesh);
+	RemoveOwnedComponent(PoppedMesh);
+	PoppedMesh->DestroyComponent();
+
+	SupplyMeshes.Pop();
 }
 
 // ==================== EDITOR ONLY ==================== //

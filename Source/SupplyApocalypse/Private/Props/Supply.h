@@ -6,6 +6,7 @@
 #include "GameFramework/Actor.h"
 #include "Supply.generated.h"
 
+class AThrowerCharacter;
 class UBoxComponent;
 
 /** The actual supply that will be thrown */
@@ -31,9 +32,20 @@ private:
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UStaticMeshComponent> Mesh;
 
+	UPROPERTY(EditDefaultsOnly)
+	TArray<TSoftObjectPtr<UStaticMesh>> SupplyMesh;
+
+	// ===== Game Objects ========== //
+
+	UPROPERTY(EditInstanceOnly, Category=GameObjects)
+	TWeakObjectPtr<AThrowerCharacter> Thrower;
+
 	// ===== Event Delegates ========== //
 
 	UFUNCTION()
 	void OnColliderBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
+	// ===== Supply ========== //
+
+	void CreateSupply();
 };

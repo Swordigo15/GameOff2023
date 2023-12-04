@@ -25,6 +25,11 @@ public:
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent);
 #endif
 
+	// ===== Attributes ========== //
+
+	/** Should be called by the manager, used to visually remove the mesh */
+	void PopSupply();
+
 protected:
 	// ===== Lifecycles ========== //
 
@@ -48,8 +53,6 @@ private:
 
 	UPROPERTY(EditAnywhere, Category=Attributes)
 	uint8 MaxCount = 10;
-
-	uint8 CurrentCount;
 
 	void PlaceSupplies();
 };

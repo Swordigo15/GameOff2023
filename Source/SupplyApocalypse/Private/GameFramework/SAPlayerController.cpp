@@ -2,6 +2,7 @@
 
 #include "GameFramework/SAPlayerController.h"
 #include "EnhancedInputSubsystems.h"
+#include "HUDs/SAHUD.h"
 #include "InputMappingContext.h"
 
 // ==================== Lifecycles ==================== //
@@ -12,9 +13,15 @@ void ASAPlayerController::BeginPlay()
 
     UseGameInput();
 
-    // Limit Pitch look
-    PlayerCameraManager->ViewPitchMin = -45.f;
-    PlayerCameraManager->ViewPitchMax = 25.f;
+    // Initialize HUDs
+    SAHUD = Cast<ASAHUD>(GetHUD());
+}
+
+// ==================== HUDs ==================== //
+
+void ASAPlayerController::UpdateMouseCursorPosition()
+{
+    SAHUD->UpdateMouseCursorPosition();
 }
 
 // ==================== Inputs ==================== //

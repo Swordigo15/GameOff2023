@@ -14,7 +14,8 @@ public class SupplyApocalypse : ModuleRules
 			"Engine",
 			"EnhancedInput",
 			"InputCore",
-			"ChaosVehicles" 
+			"ChaosVehicles",
+			"UMG"
 		});
 
 		PrivateDependencyModuleNames.AddRange(new string[] {  });

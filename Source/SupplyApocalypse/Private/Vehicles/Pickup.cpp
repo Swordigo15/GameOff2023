@@ -6,6 +6,7 @@
 #include "Camera/CameraComponent.h"
 #include "ChaosWheeledVehicleMovementComponent.h"
 #include "EnhancedInputComponent.h"
+#include "GameFramework/SAPlayerController.h"
 #include "GameFramework/SpringArmComponent.h"
 
 APickup::APickup()
@@ -36,7 +37,7 @@ APickup::APickup()
 	SpringArm->bInheritPitch = SpringArm->bInheritRoll = false;
 	SpringArm->bDoCollisionTest = false;
 	SpringArm->bEnableCameraRotationLag = true;
-	SpringArm->CameraRotationLagSpeed = 1.f;
+	SpringArm->CameraRotationLagSpeed = 2.f;
 
 	//  Camera
 	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
@@ -84,12 +85,6 @@ void APickup::DefaultAssetsInitializer()
 
 	HandbrakeAction = HandbreakObject.Object;
 
-	ConstructorHelpers::FObjectFinder<UInputAction> ChangeModeObject(
-		TEXT("/Script/EnhancedInput.InputAction'/Game/GameContent/Blueprints/Inputs/IA_ChangeMode.IA_ChangeMode'")
-	);
-
-	ChangeModeAction = ChangeModeObject.Object;
-
 	ConstructorHelpers::FObjectFinder<UInputAction> LookObject(
 		TEXT("/Script/EnhancedInput.InputAction'/Game/GameContent/Blueprints/Inputs/IA_Look.IA_Look'")
 	);
@@ -114,7 +109,6 @@ void APickup::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 		EnhancedInput->BindAction(HandbrakeAction.LoadSynchronous(), ETriggerEvent::Triggered, this, &ThisClass::Handbrake);
 		EnhancedInput->BindAction(HandbrakeAction.LoadSynchronous(), ETriggerEvent::Completed, this, &ThisClass::Handbrake);
 		EnhancedInput->BindAction(LookAction.LoadSynchronous(), ETriggerEvent::Triggered, this, &ThisClass::Look);
-		EnhancedInput->BindAction(ChangeModeAction.LoadSynchronous(), ETriggerEvent::Triggered, this, &ThisClass::ChangeMode);
 	}
 }
 
@@ -122,7 +116,15 @@ void APickup::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	ReorientCamera(DeltaTime);
+}
+
+// ==================== Game Frameworks ==================== //
+
+const bool APickup::IsPlayerControllerValid()
+{
+	if (!PlayerController.IsValid()) PlayerController = Cast<ASAPlayerController>(GetController());
+
+	return PlayerController.IsValid();
 }
 
 // ==================== Input ==================== //
@@ -150,39 +152,14 @@ void APickup::Handbrake(const FInputActionValue& InputValue)
 
 void APickup::Look(const FInputActionValue& InputValue)
 {
-	// Make a timer so the auto camera follow is deactivated
-	GetWorldTimerManager().SetTimer(CameraFollowTimerHandle, CameraFollowTimer, false);
+	if (!IsPlayerControllerValid()) return;
 
-	// Getting the value from input
-	const FVector2D Value = InputValue.Get<FVector2D>();
+	// Update cursor position
+	PlayerController->UpdateMouseCursorPosition();
 
-	// Add the relative rotation by the angle
-	float CurrentYaw = SpringArm->GetRelativeRotation().Yaw;
-	float NewYaw 	 = FMath::Clamp(CurrentYaw + Value.X, -DriveAngleLimit, DriveAngleLimit);
+	// Make the thrower character look at cursor
+	FHitResult OutResult;
+	PlayerController->GetHitResultUnderCursorByChannel(ETraceTypeQuery::TraceTypeQuery1, false, OutResult);
 
-	// Finally add angle to the vehicle vector rotation
-	if (NewYaw != -DriveAngleLimit && NewYaw != DriveAngleLimit)
-		SpringArm->AddLocalRotation(FRotator(0.f, Value.X, 0.f));
-}
-
-void APickup::ChangeMode()
-{
-	GetController()->Possess(Thrower.Get());	
-}
-
-// ==================== Camera ==================== //
-
-void APickup::ReorientCamera(float DeltaTime)
-{
-	float CurrentYaw = SpringArm->GetRelativeRotation().Yaw;
-
-	// Only following when the timer is over and the difference is significant
-	bool bActivated = FMath::Abs(CurrentYaw) > 0.5f && 
-					  (!GetWorldTimerManager().IsTimerActive(CameraFollowTimerHandle) || Movement->GetForwardSpeedMPH() > 1.f);
-
-	if (!bActivated) return;
-
-	float NewYaw = FMath::FInterpTo(CurrentYaw, 0.f, DeltaTime, 1.f);
-
-	SpringArm->SetRelativeRotation(FRotator(0.f, NewYaw, 0.f));
+	Thrower->Look(OutResult.ImpactPoint);
 }

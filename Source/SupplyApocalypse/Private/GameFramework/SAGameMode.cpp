@@ -1,6 +1,7 @@
 // Copyright Anrility. All Rights Reserved.
 
 #include "GameFramework/SAGameMode.h"
+#include "GameFramework/HUD.h"
 
 ASAGameMode::ASAGameMode()
 {
@@ -22,4 +23,10 @@ void ASAGameMode::InitializeGameFramework()
         TEXT("/Game/GameContent/Blueprints/GameFramework/BP_SAPlayerController")
     );
     PlayerControllerClass = ControllerClass.Class;
+
+    // HUDs
+    ConstructorHelpers::FClassFinder<AHUD> SAHUDClass(
+        TEXT("/Game/GameContent/Blueprints/HUDs/BP_SAHUD")
+    );
+    HUDClass = SAHUDClass.Class;
 }

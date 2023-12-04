@@ -6,6 +6,7 @@
 #include "GameFramework/Pawn.h"
 #include "Pickup.generated.h"
 
+class ASAPlayerController;
 class AThrowerCharacter;
 class UBoxComponent;
 class UChaosWheeledVehicleMovementComponent;
@@ -35,6 +36,13 @@ protected:
 	virtual void BeginPlay() override;
 
 private:
+	// ===== Game Frameworks ========== //
+
+	UPROPERTY()
+	TWeakObjectPtr<ASAPlayerController> PlayerController;
+
+	const bool IsPlayerControllerValid();
+
 	// ===== Initializer ========== //
 
 	void DefaultAssetsInitializer();
@@ -47,7 +55,6 @@ private:
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UChaosWheeledVehicleMovementComponent> Movement;
 
-	/** For driving mode */
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<USpringArmComponent> SpringArm;
 
@@ -65,28 +72,13 @@ private:
 	UPROPERTY(EditAnywhere, Category=Inputs)
 	TSoftObjectPtr<UInputAction> LookAction;
 
-	UPROPERTY(EditAnywhere, Category=Inputs)
-	TSoftObjectPtr<UInputAction> ChangeModeAction;
-
 	void Move(const FInputActionValue& InputValue);
 	void Handbrake(const FInputActionValue& InputValue);
 	void Look(const FInputActionValue& InputValue);
-	void ChangeMode();
-
-	// ===== Camera ========== //
-
-	/** When the timer is over, will automatically make the camera follow activated */
-	float CameraFollowTimer = 5.f;
-	FTimerHandle CameraFollowTimerHandle;
-
-	/** Maximum/minimum angle that can be look at when on Driving Mode */
-	float DriveAngleLimit = 35.f;
-
-	/** Make the camera always follow the vehicle's front/back */
-	void ReorientCamera(float DeltaTime);
 
 	// ===== Game Objects ========== //
 	
-	UPROPERTY(EditInstanceOnly)
+	/** This should be inisiate! OR else will crash the game */
+	UPROPERTY(EditInstanceOnly, Category=GameObjects)
 	TWeakObjectPtr<AThrowerCharacter> Thrower;
 };

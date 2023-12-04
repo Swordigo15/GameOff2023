@@ -1,6 +1,7 @@
 // Copyright Anrility. All Rights Reserved.
 
 #include "Props/Supply.h"
+#include "Characters/ThrowerCharacter.h"
 #include "Components/BoxComponent.h"
 
 ASupply::ASupply()
@@ -33,6 +34,9 @@ void ASupply::BeginPlay()
 	
 	// Bindin Delegates
 	Collider->OnComponentBeginOverlap.AddDynamic(this, &ThisClass::OnColliderBeginOverlap);
+
+	// ...
+	CreateSupply();
 }
 
 // ==================== Event Delegates ==================== //
@@ -40,4 +44,18 @@ void ASupply::BeginPlay()
 void ASupply::OnColliderBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 
+}
+
+// ==================== Supply ==================== //
+
+void ASupply::CreateSupply()
+{
+	if (SupplyMesh.IsEmpty() || !Thrower.IsValid()) return;
+
+	// Randomly picks what supply to throw
+	uint8 Rand = FMath::RandRange(0, SupplyMesh.Num() - 1);
+	Mesh->SetStaticMesh(SupplyMesh[Rand].LoadSynchronous());
+
+	// Attach to the thrower character
+	AttachToActor(Thrower.Get(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("ThrowSocket"));
 }
