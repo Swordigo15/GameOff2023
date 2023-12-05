@@ -8,7 +8,6 @@
 
 class ASAPlayerController;
 class AThrowerCharacter;
-class UBoxComponent;
 class UChaosWheeledVehicleMovementComponent;
 class UCameraComponent;
 class UInputAction;

@@ -20,7 +20,12 @@ public:
 
 	// ===== Supply ========== //
 
+	/** Respawn the supply by not reallocate it from memory */
 	void CreateSupply();
+
+	/** Throw the supply with certain power
+	 * @param Power How strong the throw be
+	 */
 	FORCEINLINE void Throw(float Power);
 
 protected:
@@ -38,7 +43,7 @@ private:
 	TObjectPtr<UStaticMeshComponent> Mesh;
 
 	UPROPERTY(EditDefaultsOnly)
-	TArray<TSoftObjectPtr<UStaticMesh>> SupplyMesh;
+	TArray<TSoftObjectPtr<UStaticMesh>> MeshAssets;
 
 	// ===== Game Objects ========== //
 

@@ -56,6 +56,7 @@ void AThrowerCharacter::Tick(float DeltaTime)
 
 void AThrowerCharacter::Look(const FVector& CrosshairPosition)
 {
+	// Enabling look interpolation
 	bShouldLook = true;
 	LookTarget  = CrosshairPosition;
 }
@@ -108,10 +109,10 @@ void AThrowerCharacter::ClampView(const FRotator& NewRot)
 	// Get vectors
 	const FVector PickupBack       = Pickup->GetActorForwardVector() * -1.f;
 	const FVector CharacterForward = 		 GetActorForwardVector();
-	const FVector CharacterRight   = 		 GetActorRightVector() * -1.f;
+	const FVector CharacterRight   = 		 GetActorRightVector();
 
-	// Get the direction using cross product
-	bool bLeftSided = FVector::DotProduct(CharacterRight, PickupBack) > 0.f;
+	// Get the direction using dot product
+	bool bLeftSided = FVector::DotProduct(CharacterRight, PickupBack) < 0.f;
 	float NegDelta  = Delta > 0.f ? 0.f   : Delta;
 	float PosDelta  = Delta > 0.f ? Delta : 0.f;
 	float ClampedYaw = bLeftSided ? NegDelta : PosDelta;
@@ -129,11 +130,4 @@ void AThrowerCharacter::ClampView(const FRotator& NewRot)
 	FRotator CurrentRot = GetActorRotation();
 	if (CurrentRot.Pitch != 0.f || CurrentRot.Roll != 0.f)
 		SetActorRotation(FRotator(0.f, CurrentRot.Yaw, 0.f));
-}
-
-// ==================== Accessors ==================== //
-
-FVector AThrowerCharacter::GetThrowUnit() const
-{
-	return (ThrowPoint->GetComponentLocation() - SkeletalMesh->GetSocketLocation(TEXT("ThrowSocket"))).GetSafeNormal();
 }

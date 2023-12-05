@@ -10,6 +10,7 @@ ASupply::ASupply()
 
 	// Collider
 	Collider = CreateDefaultSubobject<USphereComponent>(TEXT("Collider"));
+
 	/** Collision **/
 	Collider->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	Collider->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
@@ -22,8 +23,6 @@ ASupply::ASupply()
 	// Mesh
 	Mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
 	Mesh->SetupAttachment(RootComponent);
-	
-	/** Collision **/
 	Mesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 
@@ -54,7 +53,7 @@ void ASupply::OnColliderBeginOverlap(UPrimitiveComponent* HitComponent, AActor* 
 
 void ASupply::CreateSupply()
 {
-	if (SupplyMesh.IsEmpty() || !Thrower.IsValid()) return;
+	if (MeshAssets.IsEmpty() || !Thrower.IsValid()) return;
 
 	SetOwner(Thrower.Get());
 
@@ -63,8 +62,8 @@ void ASupply::CreateSupply()
 	Collider->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 	// Randomly picks what supply to throw
-	uint8 Rand = FMath::RandRange(0, SupplyMesh.Num() - 1);
-	Mesh->SetStaticMesh(SupplyMesh[Rand].LoadSynchronous());
+	uint8 Rand = FMath::RandRange(0, MeshAssets.Num() - 1);
+	Mesh->SetStaticMesh(MeshAssets[Rand].LoadSynchronous());
 
 	// Attach to the thrower character
 	USkeletalMeshComponent* ThrowerMesh = Thrower.Get()->GetMesh();

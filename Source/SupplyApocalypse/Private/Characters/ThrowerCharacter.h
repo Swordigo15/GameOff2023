@@ -52,6 +52,7 @@ private:
 
 	// ===== Attributes ========== //
 
+	/** The bigger the power, the farther his throw */
 	UPROPERTY(EditAnywhere, Category=Attributes)
 	float ThrowPower = 100.f;
 
@@ -60,13 +61,17 @@ private:
 
 	// ===== View ========== //
 
+	/** Maximum angle view from the pickup's back */
 	UPROPERTY(EditAnywhere, Category=View, meta=(Units="Degrees"))
 	float MaximumView = 75.f;
 
 	bool    bShouldLook;
 	FVector LookTarget;
 
+	/** Interpolating the actor rotation and makes it facing the mouse cursor */
 	void LookAt(float DeltaTime);
+
+	/** Makes the actor won't go farther than the maximum view */
 	void ClampView(const FRotator& NewRot);
 
 public:
@@ -76,5 +81,8 @@ public:
 	{
 		return SkeletalMesh;
 	}
-	FORCEINLINE FVector GetThrowUnit() const;
+	FORCEINLINE FVector GetThrowUnit() const
+	{
+		return (ThrowPoint->GetComponentLocation() - SkeletalMesh->GetSocketLocation(TEXT("ThrowSocket"))).GetSafeNormal();
+	}
 };

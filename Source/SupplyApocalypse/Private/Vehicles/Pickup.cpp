@@ -2,7 +2,6 @@
 
 #include "Vehicles/Pickup.h"
 #include "Characters/ThrowerCharacter.h"
-#include "Components/BoxComponent.h"
 #include "Camera/CameraComponent.h"
 #include "ChaosWheeledVehicleMovementComponent.h"
 #include "EnhancedInputComponent.h"
@@ -106,13 +105,16 @@ void APickup::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	if (UEnhancedInputComponent* EnhancedInput = Cast<UEnhancedInputComponent>(PlayerInputComponent))
 	{
-		EnhancedInput->BindAction(MoveAction.LoadSynchronous(), ETriggerEvent::Triggered, this, &ThisClass::Move);
-		EnhancedInput->BindAction(MoveAction.LoadSynchronous(), ETriggerEvent::Completed, this, &ThisClass::Move);
+		EnhancedInput->BindAction(MoveAction	 .LoadSynchronous(), ETriggerEvent::Triggered, this, &ThisClass::Move);
+		EnhancedInput->BindAction(MoveAction	 .LoadSynchronous(), ETriggerEvent::Completed, this, &ThisClass::Move);
+
 		EnhancedInput->BindAction(HandbrakeAction.LoadSynchronous(), ETriggerEvent::Triggered, this, &ThisClass::Handbrake);
 		EnhancedInput->BindAction(HandbrakeAction.LoadSynchronous(), ETriggerEvent::Completed, this, &ThisClass::Handbrake);
-		EnhancedInput->BindAction(LookAction.LoadSynchronous(), ETriggerEvent::Triggered, this, &ThisClass::Look);
-		EnhancedInput->BindAction(ThrowAction.LoadSynchronous(), ETriggerEvent::Triggered, Thrower.Get(), &AThrowerCharacter::AdjustSpeed);
-		EnhancedInput->BindAction(ThrowAction.LoadSynchronous(), ETriggerEvent::Completed, Thrower.Get(), &AThrowerCharacter::Throw);
+
+		EnhancedInput->BindAction(LookAction	 .LoadSynchronous(), ETriggerEvent::Triggered, this, &ThisClass::Look);
+		
+		EnhancedInput->BindAction(ThrowAction	 .LoadSynchronous(), ETriggerEvent::Triggered, Thrower.Get(), &AThrowerCharacter::AdjustSpeed);
+		EnhancedInput->BindAction(ThrowAction	 .LoadSynchronous(), ETriggerEvent::Completed, Thrower.Get(), &AThrowerCharacter::Throw);
 	}
 }
 

@@ -24,10 +24,7 @@ private:
 	// ===== Components ========== //
 
 	UPROPERTY(VisibleAnywhere)
-	TObjectPtr<USceneComponent> Root;
-
-	UPROPERTY(VisibleAnywhere)
-	TObjectPtr<USplineComponent> Road;
+	TObjectPtr<USplineComponent> RoadSpline;
 
 	// ===== Assets ========== //
 

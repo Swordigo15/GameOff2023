@@ -85,6 +85,7 @@ void ASupplies::PopSupply()
 	uint8 I = SupplyMeshes.Num() - 1;
 	UStaticMeshComponent* PoppedMesh = SupplyMeshes[I];
 
+	// Make sure to remove it from the actor
 	RemoveInstanceComponent(PoppedMesh);
 	RemoveOwnedComponent(PoppedMesh);
 	PoppedMesh->DestroyComponent();
@@ -99,6 +100,7 @@ void ASupplies::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEve
 {
 	Super::PostEditChangeProperty(PropertyChangedEvent);
 
+	// This will make editor auto refresh when changing the supply's property
 	GUnrealEd->UpdateFloatingPropertyWindows();
 }
 #endif

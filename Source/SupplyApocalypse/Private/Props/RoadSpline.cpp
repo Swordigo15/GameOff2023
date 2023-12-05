@@ -9,15 +9,13 @@ ARoadSpline::ARoadSpline()
 	PrimaryActorTick.bCanEverTick = false;
 
 	// Default root component
-	Root = CreateDefaultSubobject<USceneComponent>(TEXT("Default Root"));
-	Root->SetMobility(EComponentMobility::Static);
+	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("Default Root"));
+	RootComponent->SetMobility(EComponentMobility::Static);
 
-	SetRootComponent(Root);
-
-	// Road Spline Component
-	Road = CreateDefaultSubobject<USplineComponent>(TEXT("Road Spline"));
-	Road->SetupAttachment(RootComponent);
-	Road->SetMobility(EComponentMobility::Static);
+	// RoadSpline Spline Component
+	RoadSpline = CreateDefaultSubobject<USplineComponent>(TEXT("Road Spline"));
+	RoadSpline->SetupAttachment(RootComponent);
+	RoadSpline->SetMobility(EComponentMobility::Static);
 
 	// Loading road asset
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> RoadMeshObj(
@@ -34,7 +32,7 @@ void ARoadSpline::OnConstruction(const FTransform& Transform)
 	Super::OnConstruction(Transform);
 
 	// Building the roads
-	int32 Num = Road->GetNumberOfSplinePoints();
+	int32 Num = RoadSpline->GetNumberOfSplinePoints();
 
 	for (int32 I = 0; I < Num - 1; ++I)
 	{
@@ -42,8 +40,8 @@ void ARoadSpline::OnConstruction(const FTransform& Transform)
 		FVector StartLocation, StartTangent;
 		FVector EndLocation, EndTangent;
 
-		Road->GetLocationAndTangentAtSplinePoint(I, StartLocation, StartTangent, ESplineCoordinateSpace::Local);
-		Road->GetLocationAndTangentAtSplinePoint(I + 1, EndLocation, EndTangent, ESplineCoordinateSpace::Local);
+		RoadSpline->GetLocationAndTangentAtSplinePoint(I, StartLocation, StartTangent, ESplineCoordinateSpace::Local);
+		RoadSpline->GetLocationAndTangentAtSplinePoint(I + 1, EndLocation, EndTangent, ESplineCoordinateSpace::Local);
 
 		// Spline Mesh
 		USplineMeshComponent* SplineMesh = Cast<USplineMeshComponent>(

@@ -24,6 +24,7 @@ protected:
 private:
 	// ===== HUDs ========== //
 
+	/** Using widget mouse cursor so it won't interupt the input */
 	UPROPERTY(EditAnywhere, Category=HUDs)
 	TSubclassOf<UUserWidget> MouseCursorClass;
 
