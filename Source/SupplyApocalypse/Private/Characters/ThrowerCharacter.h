@@ -25,6 +25,7 @@ public:
 	// ===== Input Handlers ========== //
 
 	FORCEINLINE void Look(const FVector& CrosshairPosition);
+	FORCEINLINE void AdjustSpeed();
 	FORCEINLINE void Throw();
 
 protected:
@@ -53,6 +54,9 @@ private:
 
 	UPROPERTY(EditAnywhere, Category=Attributes)
 	float ThrowPower = 100.f;
+
+	/** Will the power increased or decreased */
+	float PowerDelta = 30.f;
 
 	// ===== View ========== //
 

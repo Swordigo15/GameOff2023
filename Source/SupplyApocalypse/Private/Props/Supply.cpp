@@ -15,6 +15,7 @@ ASupply::ASupply()
 	Collider->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 	Collider->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldStatic, ECollisionResponse::ECR_Block);
 	Collider->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldDynamic, ECollisionResponse::ECR_Block);
+	Collider->SetNotifyRigidBodyCollision(true);
 
 	SetRootComponent(Collider);
 
@@ -33,18 +34,20 @@ void ASupply::BeginPlay()
 	Super::BeginPlay();
 	
 	// Binding Delegates
-	Collider->OnComponentBeginOverlap.AddDynamic(this, &ThisClass::OnColliderBeginOverlap);
+	Collider->OnComponentHit.AddDynamic(this, &ThisClass::OnColliderBeginOverlap);
 
 	// ...
-	SetOwner(Thrower.Get());
 	CreateSupply();
 }
 
 // ==================== Event Delegates ==================== //
 
-void ASupply::OnColliderBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+void ASupply::OnColliderBeginOverlap(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
+	if (GetWorldTimerManager().IsTimerActive(DestroyTimerHandle)) return;
 
+	// Don't just immediately destroy, give delay
+	GetWorldTimerManager().SetTimer(DestroyTimerHandle, this, &ThisClass::CreateSupply, DestroyTimer);
 }
 
 // ==================== Supply ==================== //
@@ -53,9 +56,11 @@ void ASupply::CreateSupply()
 {
 	if (SupplyMesh.IsEmpty() || !Thrower.IsValid()) return;
 
+	SetOwner(Thrower.Get());
+
 	// Disable any physics
-	Collider->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	Collider->SetSimulatePhysics(false);
+	Collider->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 	// Randomly picks what supply to throw
 	uint8 Rand = FMath::RandRange(0, SupplyMesh.Num() - 1);
@@ -68,6 +73,10 @@ void ASupply::CreateSupply()
 
 void ASupply::Throw(float Power)
 {
+	// This means the supply is thrown
+	if (!GetOwner()) return;
+
+	SetOwner(nullptr);
 	DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
 
 	// Enable physics

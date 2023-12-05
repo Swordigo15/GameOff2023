@@ -111,7 +111,8 @@ void APickup::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 		EnhancedInput->BindAction(HandbrakeAction.LoadSynchronous(), ETriggerEvent::Triggered, this, &ThisClass::Handbrake);
 		EnhancedInput->BindAction(HandbrakeAction.LoadSynchronous(), ETriggerEvent::Completed, this, &ThisClass::Handbrake);
 		EnhancedInput->BindAction(LookAction.LoadSynchronous(), ETriggerEvent::Triggered, this, &ThisClass::Look);
-		EnhancedInput->BindAction(ThrowAction.LoadSynchronous(), ETriggerEvent::Completed, this, &ThisClass::Throw);
+		EnhancedInput->BindAction(ThrowAction.LoadSynchronous(), ETriggerEvent::Triggered, Thrower.Get(), &AThrowerCharacter::AdjustSpeed);
+		EnhancedInput->BindAction(ThrowAction.LoadSynchronous(), ETriggerEvent::Completed, Thrower.Get(), &AThrowerCharacter::Throw);
 	}
 }
 
@@ -165,9 +166,4 @@ void APickup::Look(const FInputActionValue& InputValue)
 	PlayerController->GetHitResultUnderCursorByChannel(ETraceTypeQuery::TraceTypeQuery1, false, OutResult);
 
 	Thrower->Look(OutResult.ImpactPoint);
-}
-
-void APickup::Throw()
-{
-	Thrower->Throw();
 }

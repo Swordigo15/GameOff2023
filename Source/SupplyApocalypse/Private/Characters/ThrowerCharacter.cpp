@@ -60,9 +60,22 @@ void AThrowerCharacter::Look(const FVector& CrosshairPosition)
 	LookTarget  = CrosshairPosition;
 }
 
+void AThrowerCharacter::AdjustSpeed()
+{
+	ThrowPower = FMath::Clamp(ThrowPower + PowerDelta, 200.f, 1000.f);
+
+	// Once the power is at clamp, reverse the power delta so it will do the opposite
+	// Increasing -> Decreasing, and vice versa
+	if (ThrowPower == 200.f || ThrowPower == 1000.f)
+		PowerDelta *= -1.f;
+}
+
 void AThrowerCharacter::Throw()
 {
 	Supply->Throw(ThrowPower);
+
+	// Reset Throw Power
+	ThrowPower = 100.f;
 }
 
 // ==================== Camera ==================== //
@@ -122,5 +135,5 @@ void AThrowerCharacter::ClampView(const FRotator& NewRot)
 
 FVector AThrowerCharacter::GetThrowUnit() const
 {
-	return (ThrowPoint->GetComponentLocation() - SkeletalMesh->GetSocketLocation(TEXT("ThrowerSocket"))).GetSafeNormal();
+	return (ThrowPoint->GetComponentLocation() - SkeletalMesh->GetSocketLocation(TEXT("ThrowSocket"))).GetSafeNormal();
 }
