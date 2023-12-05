@@ -7,6 +7,7 @@
 #include "ThrowerCharacter.generated.h"
 
 class APickup;
+class ASupply;
 
 UCLASS()
 class SUPPLYAPOCALYPSE_API AThrowerCharacter : public AActor
@@ -24,6 +25,7 @@ public:
 	// ===== Input Handlers ========== //
 
 	FORCEINLINE void Look(const FVector& CrosshairPosition);
+	FORCEINLINE void Throw();
 
 protected:
 	// ===== Lifecycles ========== //
@@ -36,10 +38,21 @@ private:
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<USkeletalMeshComponent> SkeletalMesh;
 
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<USceneComponent> ThrowPoint;
+
 	// ===== Game Objects ========== //
 
 	UPROPERTY(EditInstanceOnly, Category=GameObjects)
 	TWeakObjectPtr<APickup> Pickup;
+
+	UPROPERTY(EditInstanceOnly, Category=GameObjects)
+	TWeakObjectPtr<ASupply> Supply;
+
+	// ===== Attributes ========== //
+
+	UPROPERTY(EditAnywhere, Category=Attributes)
+	float ThrowPower = 100.f;
 
 	// ===== View ========== //
 
@@ -51,4 +64,13 @@ private:
 
 	void LookAt(float DeltaTime);
 	void ClampView(const FRotator& NewRot);
+
+public:
+	// ===== Accessors ========== //
+
+	FORCEINLINE USkeletalMeshComponent* GetMesh() const
+	{
+		return SkeletalMesh;
+	}
+	FORCEINLINE FVector GetThrowUnit() const;
 };

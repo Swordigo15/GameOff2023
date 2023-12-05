@@ -2,10 +2,14 @@
 
 #include "GameFramework/SAGameMode.h"
 #include "GameFramework/HUD.h"
+#include "Managers/SupplyManager.h"
 
 ASAGameMode::ASAGameMode()
 {
     InitializeGameFramework();
+
+    // Supply Manager
+    SupplyManager = NewObject<USupplyManager>(this, TEXT("Supply Manager"));
 }
 
 // ==================== Initialize References ==================== //
@@ -29,4 +33,14 @@ void ASAGameMode::InitializeGameFramework()
         TEXT("/Game/GameContent/Blueprints/HUDs/BP_SAHUD")
     );
     HUDClass = SAHUDClass.Class;
+}
+
+// ==================== Lifecycles ==================== //
+
+void ASAGameMode::BeginPlay()
+{
+    Super::BeginPlay();
+
+    // Initialize supply manager's supply
+    SupplyManager->FindSupplies();
 }

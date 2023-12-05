@@ -1,14 +1,8 @@
 // Copyright Anrility. All Rights Reserved.
 
 #include "Characters/ThrowerCharacter.h"
-#include "Camera/CameraComponent.h"
-#include "Camera/PlayerCameraManager.h"
-#include "Components/CapsuleComponent.h"
-#include "EnhancedInputComponent.h"
-#include "GameFramework/SpringArmComponent.h"
-#include "GameFramework/SAPlayerController.h"
-#include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Props/Supply.h"
 #include "Vehicles/Pickup.h"
 
 AThrowerCharacter::AThrowerCharacter()
@@ -21,6 +15,10 @@ AThrowerCharacter::AThrowerCharacter()
 	// Skeletal Mesh
 	SkeletalMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Skeletal Mesh"));
 	SkeletalMesh->SetupAttachment(RootComponent);
+
+	// Throw Point
+	ThrowPoint = CreateDefaultSubobject<USceneComponent>(TEXT("Throwing Point"));
+	ThrowPoint->SetupAttachment(RootComponent);
 }
 
 // ==================== Lifecycles ==================== //
@@ -62,9 +60,14 @@ void AThrowerCharacter::Look(const FVector& CrosshairPosition)
 	LookTarget  = CrosshairPosition;
 }
 
+void AThrowerCharacter::Throw()
+{
+	Supply->Throw(ThrowPower);
+}
+
 // ==================== Camera ==================== //
 
-void AThrowerCharacter::LookAt(float DeltaTime)
+void AThrowerCharacter::LookAt(float DeltaTime)	
 {
 	if (!bShouldLook) return;
 
@@ -108,4 +111,16 @@ void AThrowerCharacter::ClampView(const FRotator& NewRot)
 	Delta = bWithinClamped ? Delta : ClampedYaw;
 	
 	AddActorWorldRotation(FRotator(0.f, Delta, 0.f));
+
+	// Fixing pitch and roll rotation if needed
+	FRotator CurrentRot = GetActorRotation();
+	if (CurrentRot.Pitch != 0.f || CurrentRot.Roll != 0.f)
+		SetActorRotation(FRotator(0.f, CurrentRot.Yaw, 0.f));
+}
+
+// ==================== Accessors ==================== //
+
+FVector AThrowerCharacter::GetThrowUnit() const
+{
+	return (ThrowPoint->GetComponentLocation() - SkeletalMesh->GetSocketLocation(TEXT("ThrowerSocket"))).GetSafeNormal();
 }

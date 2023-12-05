@@ -7,7 +7,7 @@
 #include "Supply.generated.h"
 
 class AThrowerCharacter;
-class UBoxComponent;
+class USphereComponent;
 
 /** The actual supply that will be thrown */
 UCLASS()
@@ -18,6 +18,11 @@ class SUPPLYAPOCALYPSE_API ASupply : public AActor
 public:	
 	ASupply();
 
+	// ===== Supply ========== //
+
+	void CreateSupply();
+	FORCEINLINE void Throw(float Power);
+
 protected:
 	// ===== Lifecycles ========== //
 
@@ -27,7 +32,7 @@ private:
 	// ===== Components ========== //
 
 	UPROPERTY(VisibleAnywhere)
-	TObjectPtr<UBoxComponent> Collider;
+	TObjectPtr<USphereComponent> Collider;
 
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UStaticMeshComponent> Mesh;
@@ -44,8 +49,4 @@ private:
 
 	UFUNCTION()
 	void OnColliderBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
-
-	// ===== Supply ========== //
-
-	void CreateSupply();
 };

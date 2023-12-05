@@ -76,20 +76,22 @@ void APickup::DefaultAssetsInitializer()
 	ConstructorHelpers::FObjectFinder<UInputAction> MoveObject(
 		TEXT("/Script/EnhancedInput.InputAction'/Game/GameContent/Blueprints/Inputs/IA_Move.IA_Move'")
 	);
-
 	MoveAction = MoveObject.Object;
 
 	ConstructorHelpers::FObjectFinder<UInputAction> HandbreakObject(
 		TEXT("/Script/EnhancedInput.InputAction'/Game/GameContent/Blueprints/Inputs/IA_Handbrake.IA_Handbrake'")
 	);
-
 	HandbrakeAction = HandbreakObject.Object;
 
 	ConstructorHelpers::FObjectFinder<UInputAction> LookObject(
 		TEXT("/Script/EnhancedInput.InputAction'/Game/GameContent/Blueprints/Inputs/IA_Look.IA_Look'")
 	);
-
 	LookAction = LookObject.Object;
+
+	ConstructorHelpers::FObjectFinder<UInputAction> ThrowObject(
+		TEXT("/Script/EnhancedInput.InputAction'/Game/GameContent/Blueprints/Inputs/IA_Throw.IA_Throw'")
+	);
+	ThrowAction = ThrowObject.Object;
 }
 
 // ==================== Lifecycles ==================== //
@@ -109,6 +111,7 @@ void APickup::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 		EnhancedInput->BindAction(HandbrakeAction.LoadSynchronous(), ETriggerEvent::Triggered, this, &ThisClass::Handbrake);
 		EnhancedInput->BindAction(HandbrakeAction.LoadSynchronous(), ETriggerEvent::Completed, this, &ThisClass::Handbrake);
 		EnhancedInput->BindAction(LookAction.LoadSynchronous(), ETriggerEvent::Triggered, this, &ThisClass::Look);
+		EnhancedInput->BindAction(ThrowAction.LoadSynchronous(), ETriggerEvent::Completed, this, &ThisClass::Throw);
 	}
 }
 
@@ -162,4 +165,9 @@ void APickup::Look(const FInputActionValue& InputValue)
 	PlayerController->GetHitResultUnderCursorByChannel(ETraceTypeQuery::TraceTypeQuery1, false, OutResult);
 
 	Thrower->Look(OutResult.ImpactPoint);
+}
+
+void APickup::Throw()
+{
+	Thrower->Throw();
 }

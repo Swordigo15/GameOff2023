@@ -72,9 +72,14 @@ private:
 	UPROPERTY(EditAnywhere, Category=Inputs)
 	TSoftObjectPtr<UInputAction> LookAction;
 
+	UPROPERTY(EditAnywhere, Category=Inputs)
+	TSoftObjectPtr<UInputAction> ThrowAction;
+
 	void Move(const FInputActionValue& InputValue);
 	void Handbrake(const FInputActionValue& InputValue);
 	void Look(const FInputActionValue& InputValue);
+	
+	FORCEINLINE void Throw();
 
 	// ===== Game Objects ========== //
 	

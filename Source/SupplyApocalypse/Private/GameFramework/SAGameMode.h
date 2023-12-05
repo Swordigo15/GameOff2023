@@ -6,6 +6,8 @@
 #include "GameFramework/GameModeBase.h"
 #include "SAGameMode.generated.h"
 
+class USupplyManager;
+
 UCLASS()
 class SUPPLYAPOCALYPSE_API ASAGameMode : public AGameModeBase
 {
@@ -14,8 +16,18 @@ class SUPPLYAPOCALYPSE_API ASAGameMode : public AGameModeBase
 public:
 	ASAGameMode();
 
+protected:
+	// ===== Lifecycles ========== //
+
+	virtual void BeginPlay() override;
+	
 private:
 	// ===== Initialize References ========== //
 
 	void InitializeGameFramework();
+
+	// ===== Supply Manager ========== //
+
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<USupplyManager> SupplyManager;
 };
